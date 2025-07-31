@@ -32,3 +32,38 @@ services:
       timeout: 5s
       retries: 10
       start_period: 5s
+
+  product:
+    build:
+      context: .
+      dockerfile: ./apps/product/Dockerfile
+      target: development
+    command: pnpm run start:dev product
+    depends_on:
+      postgres_product:
+        condition: service_healthy
+    env_file:
+      - ./apps/product/.env
+    ports:
+      - '3002:3002'
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+  postgres_product:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+      PGPORT: 5433
+    ports:
+      - '5433:5433'
+    volumes:
+      - ./docker-volumes/postgres/product:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -p 5433']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
