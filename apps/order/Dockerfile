@@ -11,6 +11,6 @@ RUN pnpm i
 
 COPY . .
 
-CMD ["pnpm", "start:dev", "product"]
+CMD ["pnpm", "start:dev", "order"]
 
 
