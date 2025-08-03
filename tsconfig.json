@@ -17,6 +17,14 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
-    "paths": {}
-  }
+    "paths": {},
+    "composite": true
+  },
+  "references": [
+    { "path": "./apps/notification/tsconfig.app.json" },
+    { "path": "./apps/order/tsconfig.app.json" },
+    { "path": "./apps/payment/tsconfig.app.json" },
+    { "path": "./apps/product/tsconfig.app.json" },
+    { "path": "./apps/user/tsconfig.app.json" }
+  ]
 }

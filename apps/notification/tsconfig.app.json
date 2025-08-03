@@ -4,8 +4,8 @@
     "composite": true,
     "declaration": true,
     "declarationMap": true,
-    "outDir": "../../dist/apps/user"
+    "outDir": "../../dist/apps/notification"
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "main.ts"],
   "exclude": ["node_modules", "dist", "test", "**/*spec.ts"]
 }
