@@ -22,12 +22,13 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: postgres
+      PGPORT: 5432
     ports:
       - '5432:5432'
     volumes:
       - ./docker-volumes/postgres/user:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      test: ['CMD-SHELL', 'pg_isready -U postgres -p 5432']
       interval: 5s
       timeout: 5s
       retries: 10
@@ -93,7 +94,7 @@ services:
     ports:
       - '27017:27017'
     volumes:
-      - ./docker-volumes/mongo/order:/data/lib
+      - ./docker-volumes/mongo/order:/data/db
     command: mongod --quiet --logpath /dev/null
     healthcheck:
       test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
@@ -131,7 +132,7 @@ services:
     volumes:
       - ./docker-volumes/postgres/payment:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U postgres -p 5433']
+      test: ['CMD-SHELL', 'pg_isready -U postgres -p 5434']
       interval: 5s
       timeout: 5s
       retries: 10
@@ -162,10 +163,10 @@ services:
     ports:
       - '27018:27018'
     volumes:
-      - ./docker-volumes/mongo/notification:/data/lib
-    command: mongod --quiet --logpath /dev/null
+      - ./docker-volumes/mongo/notification:/data/db
+    command: mongod --port 27018 --quiet --logpath /dev/null
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27018/test --quiet
       interval: 5s
       timeout: 5s
       retries: 10
