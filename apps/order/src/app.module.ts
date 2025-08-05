@@ -3,6 +3,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { OrderModule } from './order/order.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import * as Joi from 'joi';
+import { ClientsModule, Transport } from '@nestjs/microservices';
+import { USER_SERVICE } from '@app/common';
 
 @Module({
   imports: [
@@ -11,6 +13,8 @@ import * as Joi from 'joi';
       validationSchema: Joi.object({
         PORT: Joi.number().required(),
         DB_URL: Joi.string().required(),
+        USER_HOST: Joi.string().required(),
+        USER_TCP_PORT: Joi.number().required(),
       }),
     }),
     MongooseModule.forRootAsync({
@@ -18,6 +22,22 @@ import * as Joi from 'joi';
         uri: configService.getOrThrow('DB_URL'),
       }),
       inject: [ConfigService],
+    }),
+    ClientsModule.registerAsync({
+      clients: [
+        {
+          name: USER_SERVICE,
+          useFactory: (configService: ConfigService) => ({
+            transport: Transport.TCP,
+            options: {
+              host: configService.getOrThrow<string>('USER_HOST'),
+              port: +configService.getOrThrow<number>('USER_TCP_PORT'),
+            },
+          }),
+          inject: [ConfigService],
+        },
+      ],
+      isGlobal: true,
     }),
     OrderModule,
   ],

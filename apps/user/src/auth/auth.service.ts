@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { UserService } from '../user/user.service';
 import { RegisterDto } from './dto/register.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -59,6 +63,48 @@ export class AuthService {
     };
   }
 
+  async parseBearerToken(rawToken: string, isRefreshToken: boolean) {
+    if (!rawToken) {
+      throw new BadRequestException('no token error');
+    }
+
+    const bearerSplit = rawToken.split(' ');
+
+    if (bearerSplit.length !== 2) {
+      throw new BadRequestException('토큰 포맷이 잘못됐습니다!');
+    }
+
+    const [bearer, token] = bearerSplit;
+
+    if (bearer.toLowerCase() !== 'bearer')
+      throw new BadRequestException('invalid bearer token format');
+
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const payload = await this.jwtService.verifyAsync(token, {
+        secret: this.configService.getOrThrow<string>(
+          isRefreshToken ? 'REFRESH_TOKEN_SECRET' : 'ACCESS_TOKEN_SECRET',
+        ),
+      });
+
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      if (isRefreshToken && payload.type !== 'refresh') {
+        throw new BadRequestException('It should be refresh token');
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      if (!isRefreshToken && payload.type !== 'access') {
+        throw new BadRequestException('It should be access token');
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+      return payload;
+    } catch (error) {
+      console.error(error);
+      throw new UnauthorizedException('token has been expierd');
+    }
+  }
+
   async login(rawToken: string) {
     const { email, password } = this.parseBasicToken(rawToken);
 
@@ -103,8 +149,7 @@ export class AuthService {
       {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
         sub: user.id ?? user.sub,
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-        role: user.role,
+        // role: user.role,
         type: isRefreshToken ? 'refresh' : 'access',
       },
       {

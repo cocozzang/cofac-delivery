@@ -3,12 +3,16 @@ import {
   Controller,
   Post,
   UnauthorizedException,
+  UseInterceptors,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { CurrentAuthrization } from './decorator/current-authorization.decorator';
+import { MessagePattern, Payload, Transport } from '@nestjs/microservices';
+import { ParseBearerTokenDto } from './dto/parse-bearer-token.dto';
+import { RpcInterceptor } from '@app/common/interceptor/rpc.interceptor';
 
 @Controller('auth')
 export class AuthController {
@@ -25,10 +29,23 @@ export class AuthController {
   }
 
   @Post('login')
-  @UsePipes(ValidationPipe)
+  @UsePipes(new ValidationPipe({ forbidNonWhitelisted: true, whitelist: true }))
   loginUser(@CurrentAuthrization() token: string) {
     if (token === null) throw new UnauthorizedException('토큰 주셈');
 
     return this.authService.login(token);
+  }
+
+  @MessagePattern(
+    {
+      cmd: 'parse_bearer_token',
+    },
+    Transport.TCP,
+  )
+  @UsePipes(new ValidationPipe({ forbidNonWhitelisted: true, whitelist: true }))
+  @UseInterceptors(RpcInterceptor)
+  async parseBearerToken(@Payload() payload: ParseBearerTokenDto) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return await this.authService.parseBearerToken(payload.token, false);
   }
 }
