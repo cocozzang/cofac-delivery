@@ -14,14 +14,12 @@ export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
   @Post()
-  // @UsePipes(ValidationPipe)
+  @UsePipes(new ValidationPipe({ forbidNonWhitelisted: true, whitelist: true }))
   async createOrder(
     @CurrentAuthrization() token: string,
     @Body() createOrderDto: CreateOrderDto,
   ) {
-    console.log(
-      `${new Date(Date.now()).toISOString()} : request has been sent`,
-    );
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return this.orderService.createOrder(token, createOrderDto);
   }
 }
