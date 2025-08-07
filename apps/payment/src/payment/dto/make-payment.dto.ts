@@ -4,6 +4,10 @@ import { PaymentMethodEnum } from '../entity/payment.entity';
 export class MakePaymentDto {
   @IsString()
   @IsNotEmpty()
+  orderId: string;
+
+  @IsString()
+  @IsNotEmpty()
   paymentMethod: PaymentMethodEnum;
 
   @IsString()
