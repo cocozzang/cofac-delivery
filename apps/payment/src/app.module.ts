@@ -11,6 +11,7 @@ import { PaymentModule } from './payment/payment.module';
       validationSchema: Joi.object({
         PORT: Joi.number().required(),
         DB_URL: Joi.string().required(),
+        TCP_PORT: Joi.number().required(),
       }),
     }),
     TypeOrmModule.forRootAsync({
