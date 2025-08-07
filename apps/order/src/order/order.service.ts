@@ -6,16 +6,17 @@ import { Inject, Injectable } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { ClientProxy } from '@nestjs/microservices';
 import { lastValueFrom } from 'rxjs';
-import { PRODUCT_SERVICE, USER_SERVICE } from '@app/common';
+import { PAYMENT_SERVICE, PRODUCT_SERVICE, USER_SERVICE } from '@app/common';
 import { PaymentCancelledException } from './exception/payment-cancelled.exception';
 import { Product } from './entity/product.schema';
 import { UserEntity } from 'apps/user/src/user/entity/user.entity';
 import { Customer } from './entity/customer.schema';
 import { AddressDto } from './dto/address.dto';
-import { Order } from './entity/order.schema';
+import { Order, OrderStatusEnum } from './entity/order.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { PaymentDto } from './dto/payment.dto';
+import { PaymentFiledException } from './exception/payment-failed.exception';
 
 @Injectable()
 export class OrderService {
@@ -24,6 +25,8 @@ export class OrderService {
     private readonly userService: ClientProxy,
     @Inject(PRODUCT_SERVICE)
     private readonly productService: ClientProxy,
+    @Inject(PAYMENT_SERVICE)
+    private readonly paymentService: ClientProxy,
     @InjectModel(Order.name)
     private readonly orderModel: Model<Order>,
   ) {}
@@ -52,9 +55,18 @@ export class OrderService {
       address,
       payment,
     );
+
     // 6) 결제 시도하기
-    // 7) 주문 상태 업데이트하기
-    // 8) 결과 반환하기
+    await this.processPayment(
+      // eslint-disable-next-line @typescript-eslint/no-base-to-string
+      order._id.toString(),
+      // order._id.toHexString(), ObjectId객체안에 toHexString() 메서드가 왜 없을까?
+      payment,
+      user.email,
+    );
+
+    // 7) 결과 반환하기
+    return this.orderModel.findById(order._id);
   }
 
   private async getUserFromToken(token: string): Promise<UserEntity> {
@@ -127,5 +139,44 @@ export class OrderService {
       deliveryAddress,
       payment,
     });
+  }
+
+  private async processPayment(
+    orderId: string,
+    paymentDto: PaymentDto,
+    userEmail: string,
+  ) {
+    try {
+      const response = await lastValueFrom(
+        this.paymentService.send(
+          { cmd: 'make_payment' },
+          { ...paymentDto, userEmail },
+        ),
+      );
+
+      if (response.status === 'error')
+        throw new PaymentFiledException(response);
+
+      const isPaid = response.data.paymentStatus === 'Approved';
+      const orderStatus = isPaid
+        ? OrderStatusEnum.paymentProcessed
+        : OrderStatusEnum.paymentFailed;
+
+      if (orderStatus === OrderStatusEnum.paymentFailed)
+        throw new PaymentFiledException(response.error);
+
+      await this.orderModel.findByIdAndUpdate(orderId, {
+        status: OrderStatusEnum.paymentProcessed,
+      });
+
+      // return response;
+    } catch (error) {
+      if (error instanceof PaymentFiledException) {
+        await this.orderModel.findByIdAndUpdate(orderId, {
+          status: OrderStatusEnum.paymentFailed,
+        });
+      }
+      throw error;
+    }
   }
 }
