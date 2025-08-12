@@ -1,19 +1,23 @@
 import { IsNotEmpty, IsString } from 'class-validator';
 
-export class RegisterDto {
-  @IsString()
-  @IsNotEmpty()
-  token: string;
-
+export class AddressDto {
   @IsString()
   @IsNotEmpty()
   name: string;
 
   @IsString()
   @IsNotEmpty()
-  age: number;
+  street: string;
 
   @IsString()
   @IsNotEmpty()
-  profile: string;
+  city: string;
+
+  @IsString()
+  @IsNotEmpty()
+  postalCode: string;
+
+  @IsString()
+  @IsNotEmpty()
+  country: string;
 }

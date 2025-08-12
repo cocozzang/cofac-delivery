@@ -1,4 +1,18 @@
 services:
+  gateway:
+    build:
+      context: .
+      dockerfile: ./apps/gateway/Dockerfile
+      target: development
+    command: pnpm start:dev gateway
+    ports:
+      - '3000:3000'
+    volumes:
+      - .:/app
+      - /app/node_modules
+    env_file:
+      - ./apps/gateway/.env
+
   user:
     build:
       context: .
@@ -8,8 +22,6 @@ services:
     depends_on:
       postgres_user:
         condition: service_healthy
-    ports:
-      - '3001:3001'
     volumes:
       - .:/app
       - /app/node_modules
@@ -45,8 +57,6 @@ services:
         condition: service_healthy
     env_file:
       - ./apps/product/.env
-    ports:
-      - '3002:3002'
     volumes:
       - .:/app
       - /app/node_modules
@@ -80,8 +90,6 @@ services:
         condition: service_healthy
     env_file:
       - ./apps/order/.env
-    ports:
-      - '3003:3003'
     volumes:
       - .:/app
       - /app/node_modules
@@ -114,8 +122,6 @@ services:
         condition: service_healthy
     env_file:
       - ./apps/payment/.env
-    ports:
-      - '3004:3004'
     volumes:
       - .:/app
       - /app/node_modules
@@ -149,8 +155,6 @@ services:
         condition: service_healthy
     env_file:
       - ./apps/notification/.env
-    ports:
-      - '3005:3005'
     volumes:
       - .:/app
       - /app/node_modules

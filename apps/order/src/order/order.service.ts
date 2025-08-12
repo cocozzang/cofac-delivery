@@ -31,11 +31,11 @@ export class OrderService {
     private readonly orderModel: Model<Order>,
   ) {}
 
-  async createOrder(token: string, createOrderDto: CreateOrderDto) {
-    const { productIds, address, payment } = createOrderDto;
+  async createOrder(createOrderDto: CreateOrderDto) {
+    const { productIds, address, payment, meta } = createOrderDto;
 
     // 1) 사용자정보 가져오기
-    const user = await this.getUserFromToken(token);
+    const user = await this.getUserFromToken(meta.user.sub);
 
     // 2) 상품정보 가져오기
     const products = (await this.getProductsByIds(productIds)) as Product[];
@@ -69,19 +69,7 @@ export class OrderService {
     return this.orderModel.findById(order._id);
   }
 
-  private async getUserFromToken(token: string): Promise<UserEntity> {
-    // 1) User MS : jwt token verifying
-
-    const tokenResponse = await lastValueFrom(
-      this.userService.send({ cmd: 'parse_bearer_token' }, { token }),
-    );
-
-    if (tokenResponse.status === 'error') {
-      throw new PaymentCancelledException(tokenResponse);
-    }
-
-    // 2) User MS : get user infomation
-    const userId = tokenResponse.data.sub;
+  private async getUserFromToken(userId: string): Promise<UserEntity> {
     const userResponse = await lastValueFrom(
       this.userService.send({ cmd: 'get_user_info' }, { userId }),
     );

@@ -52,6 +52,24 @@ export class ProductService {
         description: '노란 바나나',
         stock: 3,
       },
+      {
+        name: '복숭아',
+        price: 500,
+        description: '빵디 꿀복숭아',
+        stock: 12,
+      },
+      {
+        name: '포도',
+        price: 5000,
+        description: '무농약 포도',
+        stock: 2,
+      },
+      {
+        name: '오렌지',
+        price: 3000,
+        description: '제주도 오렌지',
+        stock: 1,
+      },
     ];
 
     await this.productRepository.save(data);

@@ -1,30 +1,25 @@
 import {
-  Body,
   Controller,
-  Post,
   UseInterceptors,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
 import { OrderService } from './order.service';
-import { CurrentAuthrization } from 'apps/user/src/auth/decorator/current-authorization.decorator';
-import { CreateOrderDto } from './dto/create-order.dto';
-import { EventPattern, Payload } from '@nestjs/microservices';
+import { EventPattern, MessagePattern, Payload } from '@nestjs/microservices';
 import { RpcInterceptor } from '@app/common';
 import { OrderStatusEnum } from './entity/order.schema';
 import { DeliveryStartedDto } from './dto/delivery-started.dto';
+import { CreateOrderDto } from './dto/create-order.dto';
 
 @Controller('order')
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
-  @Post()
-  @UsePipes(new ValidationPipe({ forbidNonWhitelisted: true, whitelist: true }))
-  async createOrder(
-    @CurrentAuthrization() token: string,
-    @Body() createOrderDto: CreateOrderDto,
-  ) {
-    return this.orderService.createOrder(token, createOrderDto);
+  @UseInterceptors(RpcInterceptor)
+  @MessagePattern({ cmd: 'create_order' })
+  @UsePipes(new ValidationPipe())
+  async createOrder(@Payload() createOrderDto: CreateOrderDto) {
+    return this.orderService.createOrder(createOrderDto);
   }
 
   @UseInterceptors(RpcInterceptor)
