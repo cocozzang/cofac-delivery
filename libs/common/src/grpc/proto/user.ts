@@ -5,6 +5,7 @@
 // source: proto/user.proto
 
 /* eslint-disable */
+import type { Metadata } from "@grpc/grpc-js";
 import { GrpcMethod, GrpcStreamMethod } from "@nestjs/microservices";
 import { Observable } from "rxjs";
 
@@ -58,23 +59,28 @@ export interface GetUserInfoResponse {
 export const USER_PACKAGE_NAME = "user";
 
 export interface AuthServiceClient {
-  parseBearerToken(request: ParseBearerTokenRequest): Observable<ParseBearerTokenResponse>;
+  parseBearerToken(request: ParseBearerTokenRequest, metadata?: Metadata): Observable<ParseBearerTokenResponse>;
 
-  registerUser(request: RegisterUserRequest): Observable<RegisterUserResponse>;
+  registerUser(request: RegisterUserRequest, metadata?: Metadata): Observable<RegisterUserResponse>;
 
-  loginUser(request: LoginUserRequest): Observable<LoginUserResponse>;
+  loginUser(request: LoginUserRequest, metadata?: Metadata): Observable<LoginUserResponse>;
 }
 
 export interface AuthServiceController {
   parseBearerToken(
     request: ParseBearerTokenRequest,
+    metadata?: Metadata,
   ): Promise<ParseBearerTokenResponse> | Observable<ParseBearerTokenResponse> | ParseBearerTokenResponse;
 
   registerUser(
     request: RegisterUserRequest,
+    metadata?: Metadata,
   ): Promise<RegisterUserResponse> | Observable<RegisterUserResponse> | RegisterUserResponse;
 
-  loginUser(request: LoginUserRequest): Promise<LoginUserResponse> | Observable<LoginUserResponse> | LoginUserResponse;
+  loginUser(
+    request: LoginUserRequest,
+    metadata?: Metadata,
+  ): Promise<LoginUserResponse> | Observable<LoginUserResponse> | LoginUserResponse;
 }
 
 export function AuthServiceControllerMethods() {
@@ -95,12 +101,13 @@ export function AuthServiceControllerMethods() {
 export const AUTH_SERVICE_NAME = "AuthService";
 
 export interface UserServiceClient {
-  getUserinfo(request: GetUserInfoRequest): Observable<GetUserInfoResponse>;
+  getUserinfo(request: GetUserInfoRequest, metadata?: Metadata): Observable<GetUserInfoResponse>;
 }
 
 export interface UserServiceController {
   getUserinfo(
     request: GetUserInfoRequest,
+    metadata?: Metadata,
   ): Promise<GetUserInfoResponse> | Observable<GetUserInfoResponse> | GetUserInfoResponse;
 }
 

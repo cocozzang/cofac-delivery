@@ -5,6 +5,7 @@
 // source: proto/product.proto
 
 /* eslint-disable */
+import type { Metadata } from "@grpc/grpc-js";
 import { GrpcMethod, GrpcStreamMethod } from "@nestjs/microservices";
 import { Observable } from "rxjs";
 
@@ -36,18 +37,20 @@ export interface GetProductsInfoResponse_ProductInfo {
 export const PRODUCT_PACKAGE_NAME = "product";
 
 export interface ProductServiceClient {
-  createSamples(request: CreateSamplesRequest): Observable<CreateSamplesResponse>;
+  createSamples(request: CreateSamplesRequest, metadata?: Metadata): Observable<CreateSamplesResponse>;
 
-  getProductsInfo(request: GetProductsInfoRequest): Observable<GetProductsInfoResponse>;
+  getProductsInfo(request: GetProductsInfoRequest, metadata?: Metadata): Observable<GetProductsInfoResponse>;
 }
 
 export interface ProductServiceController {
   createSamples(
     request: CreateSamplesRequest,
+    metadata?: Metadata,
   ): Promise<CreateSamplesResponse> | Observable<CreateSamplesResponse> | CreateSamplesResponse;
 
   getProductsInfo(
     request: GetProductsInfoRequest,
+    metadata?: Metadata,
   ): Promise<GetProductsInfoResponse> | Observable<GetProductsInfoResponse> | GetProductsInfoResponse;
 }
 

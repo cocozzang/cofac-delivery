@@ -5,6 +5,7 @@
 // source: proto/notification.proto
 
 /* eslint-disable */
+import type { Metadata } from "@grpc/grpc-js";
 import { GrpcMethod, GrpcStreamMethod } from "@nestjs/microservices";
 import { Observable } from "rxjs";
 
@@ -26,12 +27,16 @@ export interface SendPaymentNotificationResponse {
 export const NOTIFICATION_PACKAGE_NAME = "notification";
 
 export interface NotificationServiceClient {
-  sendPaymentNotification(request: SendPaymentNotificationRequest): Observable<SendPaymentNotificationResponse>;
+  sendPaymentNotification(
+    request: SendPaymentNotificationRequest,
+    metadata?: Metadata,
+  ): Observable<SendPaymentNotificationResponse>;
 }
 
 export interface NotificationServiceController {
   sendPaymentNotification(
     request: SendPaymentNotificationRequest,
+    metadata?: Metadata,
   ):
     | Promise<SendPaymentNotificationResponse>
     | Observable<SendPaymentNotificationResponse>

@@ -5,6 +5,7 @@
 // source: proto/payment.proto
 
 /* eslint-disable */
+import type { Metadata } from "@grpc/grpc-js";
 import { GrpcMethod, GrpcStreamMethod } from "@nestjs/microservices";
 import { Observable } from "rxjs";
 
@@ -32,12 +33,13 @@ export interface MakePaymentResponse {
 export const PAYMENT_PACKAGE_NAME = "payment";
 
 export interface PaymentServiceClient {
-  makePayment(request: MakePaymentRequest): Observable<MakePaymentResponse>;
+  makePayment(request: MakePaymentRequest, metadata?: Metadata): Observable<MakePaymentResponse>;
 }
 
 export interface PaymentServiceController {
   makePayment(
     request: MakePaymentRequest,
+    metadata?: Metadata,
   ): Promise<MakePaymentResponse> | Observable<MakePaymentResponse> | MakePaymentResponse;
 }
 
