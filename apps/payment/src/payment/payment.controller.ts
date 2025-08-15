@@ -4,6 +4,7 @@ import { PaymentMicroService } from '@app/common';
 import { PaymentMethodEnum } from './entity/payment.entity';
 
 @Controller()
+@PaymentMicroService.PaymentServiceControllerMethods()
 export class PaymentController
   implements PaymentMicroService.PaymentServiceController
 {

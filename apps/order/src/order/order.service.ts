@@ -1,15 +1,19 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { ClientProxy } from '@nestjs/microservices';
+import { ClientGrpc } from '@nestjs/microservices';
 import { lastValueFrom } from 'rxjs';
-import { PAYMENT_SERVICE, PRODUCT_SERVICE, USER_SERVICE } from '@app/common';
+import {
+  PAYMENT_SERVICE,
+  PaymentMicroService,
+  PRODUCT_SERVICE,
+  ProductMicroService,
+  USER_SERVICE,
+  UserMicroService,
+} from '@app/common';
 import { PaymentCancelledException } from './exception/payment-cancelled.exception';
 import { Product } from './entity/product.schema';
-import { UserEntity } from 'apps/user/src/user/entity/user.entity';
 import { Customer } from './entity/customer.schema';
 import { AddressDto } from './dto/address.dto';
 import { Order, OrderStatusEnum } from './entity/order.schema';
@@ -19,17 +23,38 @@ import { PaymentDto } from './dto/payment.dto';
 import { PaymentFiledException } from './exception/payment-failed.exception';
 
 @Injectable()
-export class OrderService {
+export class OrderService implements OnModuleInit {
+  userService: UserMicroService.UserServiceClient;
+  productService: ProductMicroService.ProductServiceClient;
+  paymentService: PaymentMicroService.PaymentServiceClient;
+
   constructor(
     @Inject(USER_SERVICE)
-    private readonly userService: ClientProxy,
+    private readonly userMicroService: ClientGrpc,
     @Inject(PRODUCT_SERVICE)
-    private readonly productService: ClientProxy,
+    private readonly productMicroService: ClientGrpc,
     @Inject(PAYMENT_SERVICE)
-    private readonly paymentService: ClientProxy,
+    private readonly paymentMicroService: ClientGrpc,
     @InjectModel(Order.name)
     private readonly orderModel: Model<Order>,
   ) {}
+
+  onModuleInit() {
+    this.userService =
+      this.userMicroService.getService<UserMicroService.UserServiceClient>(
+        UserMicroService.USER_SERVICE_NAME,
+      );
+
+    this.productService =
+      this.productMicroService.getService<ProductMicroService.ProductServiceClient>(
+        ProductMicroService.PRODUCT_SERVICE_NAME,
+      );
+
+    this.paymentService =
+      this.paymentMicroService.getService<PaymentMicroService.PaymentServiceClient>(
+        PaymentMicroService.PAYMENT_SERVICE_NAME,
+      );
+  }
 
   async createOrder(createOrderDto: CreateOrderDto) {
     const { productIds, address, payment, meta } = createOrderDto;
@@ -69,27 +94,26 @@ export class OrderService {
     return this.orderModel.findById(order._id);
   }
 
-  private async getUserFromToken(userId: string): Promise<UserEntity> {
+  private async getUserFromToken(userId: string) {
     const userResponse = await lastValueFrom(
-      this.userService.send({ cmd: 'get_user_info' }, { userId }),
+      this.userService.getUserinfo({ userId }),
     );
 
-    if (userResponse.status === 'error') {
-      throw new PaymentCancelledException(userResponse);
-    }
-
-    return userResponse.data;
+    return {
+      id: userResponse.id,
+      email: userResponse.email,
+      name: userResponse.name,
+      age: userResponse.age,
+      profile: userResponse.profile,
+    };
   }
 
   private async getProductsByIds(productIds: string[]) {
     const response = await lastValueFrom(
-      this.productService.send({ cmd: 'get_products_info' }, { productIds }),
+      this.productService.getProductsInfo({ productIds }),
     );
 
-    if (response.status === 'error')
-      throw new PaymentCancelledException('상품정보가 잘못되었습니다.');
-
-    return response.data.map((product: any) => ({
+    return response.products.map((product: any) => ({
       productId: product.id,
       name: product.name,
       price: product.price,
@@ -136,22 +160,16 @@ export class OrderService {
   ) {
     try {
       const response = await lastValueFrom(
-        this.paymentService.send(
-          { cmd: 'make_payment' },
-          { ...paymentDto, userEmail, orderId },
-        ),
+        this.paymentService.makePayment({ ...paymentDto, userEmail, orderId }),
       );
 
-      if (response.status === 'error')
-        throw new PaymentFiledException(response);
-
-      const isPaid = response.data.paymentStatus === 'Approved';
+      const isPaid = response.pyamentStatus === 'Approved';
       const orderStatus = isPaid
         ? OrderStatusEnum.paymentProcessed
         : OrderStatusEnum.paymentFailed;
 
       if (orderStatus === OrderStatusEnum.paymentFailed)
-        throw new PaymentFiledException(response.error);
+        throw new PaymentFiledException(response);
 
       await this.orderModel.findByIdAndUpdate(orderId, {
         status: OrderStatusEnum.paymentProcessed,

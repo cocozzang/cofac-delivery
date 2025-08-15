@@ -3,6 +3,7 @@ import { NotificationService } from './notification.service';
 import { NotificationMicroService } from '@app/common';
 
 @Controller()
+@NotificationMicroService.NotificationServiceControllerMethods()
 export class NotificationController
   implements NotificationMicroService.NotificationServiceController
 {
@@ -22,14 +23,5 @@ export class NotificationController
       ...res,
       status: res.status,
     };
-
-    //
-    // return {
-    //   from: response.from,
-    //   to: response.to,
-    //   subject: response.subject,
-    //   content: response.content,
-    //   status: response.status,
-    // };
   }
 }

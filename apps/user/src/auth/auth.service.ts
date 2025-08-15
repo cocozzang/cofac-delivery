@@ -12,6 +12,7 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { JwtPayloadInterface } from '@app/common';
 
 @Injectable()
 export class AuthService {
@@ -73,48 +74,87 @@ export class AuthService {
       password,
     };
   }
-
   async parseBearerToken(rawToken: string, isRefreshToken: boolean) {
-    if (!rawToken) {
-      throw new BadRequestException('no token error');
-    }
+    /// Bearer token
+    const basicSplit = rawToken.split(' ');
 
-    const bearerSplit = rawToken.split(' ');
-
-    if (bearerSplit.length !== 2) {
+    if (basicSplit.length !== 2) {
       throw new BadRequestException('토큰 포맷이 잘못됐습니다!');
     }
 
-    const [bearer, token] = bearerSplit;
+    const [bearer, token] = basicSplit;
 
-    if (bearer.toLowerCase() !== 'bearer')
-      throw new BadRequestException('invalid bearer token format');
+    if (bearer.toLowerCase() !== 'bearer') {
+      throw new BadRequestException('토큰 포맷이 잘못됐습니다!');
+    }
 
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const payload = await this.jwtService.verifyAsync(token, {
-        secret: this.configService.getOrThrow<string>(
-          isRefreshToken ? 'REFRESH_TOKEN_SECRET' : 'ACCESS_TOKEN_SECRET',
-        ),
-      });
+      const payload = await this.jwtService.verifyAsync<JwtPayloadInterface>(
+        token,
+        {
+          secret: this.configService.getOrThrow<string>(
+            isRefreshToken ? 'REFRESH_TOKEN_SECRET' : 'ACCESS_TOKEN_SECRET',
+          ),
+        },
+      );
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      if (isRefreshToken && payload.type !== 'refresh') {
-        throw new BadRequestException('It should be refresh token');
+      if (isRefreshToken) {
+        if (payload.type !== 'refresh') {
+          throw new BadRequestException('Refresh 토큰을 입력해주세요!');
+        }
+      } else {
+        if (payload.type !== 'access') {
+          throw new BadRequestException('Access 토큰을 입력해주세요!');
+        }
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      if (!isRefreshToken && payload.type !== 'access') {
-        throw new BadRequestException('It should be access token');
-      }
-
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return payload;
     } catch (error) {
       console.error(error);
-      throw new UnauthorizedException('token has been expierd');
+      throw new UnauthorizedException('토큰이 만료됐습니다!');
     }
   }
+
+  // async parseBearerToken(rawToken: string, isRefreshToken: boolean) {
+  //   if (!rawToken) {
+  //     throw new BadRequestException('no token error');
+  //   }
+  //
+  //   const bearerSplit = rawToken.split(' ');
+  //
+  //   if (bearerSplit.length !== 2) {
+  //     throw new BadRequestException('토큰 포맷이 잘못됐습니다!');
+  //   }
+  //
+  //   const [bearer, token] = bearerSplit;
+  //
+  //   if (bearer.toLowerCase() !== 'bearer')
+  //     throw new BadRequestException('invalid bearer token format');
+  //
+  //   try {
+  //     const payload = await this.jwtService.verifyAsync<JwtPayloadInterface>(
+  //       token,
+  //       {
+  //         secret: this.configService.getOrThrow<string>(
+  //           isRefreshToken ? 'REFRESH_TOKEN_SECRET' : 'ACCESS_TOKEN_SECRET',
+  //         ),
+  //       },
+  //     );
+  //
+  //     if (isRefreshToken && payload.type !== 'refresh') {
+  //       throw new BadRequestException('It should be refresh token');
+  //     }
+  //
+  //     if (!isRefreshToken && payload.type !== 'access') {
+  //       throw new BadRequestException('It should be access token');
+  //     }
+  //
+  //     return payload;
+  //   } catch (error) {
+  //     console.error(error);
+  //     throw new UnauthorizedException('token has been expierd');
+  //   }
+  // }
 
   async login(rawToken: string) {
     const { email, password } = this.parseBasicToken(rawToken);

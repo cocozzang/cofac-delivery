@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, ObjectId } from 'mongoose';
+import { Document } from 'mongoose';
 
 export enum NotificationStatusEnum {
   pending = 'pending',
@@ -7,7 +7,7 @@ export enum NotificationStatusEnum {
 }
 
 @Schema()
-export class Notification extends Document<ObjectId> {
+export class Notification extends Document<string> {
   @Prop({ required: true })
   from: string;
 

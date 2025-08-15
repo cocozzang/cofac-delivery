@@ -1,20 +1,29 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PaymentEntity, PaymentStatusEnum } from './entity/payment.entity';
 import { Repository } from 'typeorm';
 import { MakePaymentDto } from './dto/make-payment.dto';
-import { NOTIFICATION_SERVICE } from '@app/common';
-import { ClientProxy } from '@nestjs/microservices';
-import { lastValueFrom } from 'rxjs';
+import { NOTIFICATION_SERVICE, NotificationMicroService } from '@app/common';
+import { ClientGrpc } from '@nestjs/microservices';
+// import { lastValueFrom } from 'rxjs';
 
 @Injectable()
-export class PaymentService {
+export class PaymentService implements OnModuleInit {
+  notificationService: NotificationMicroService.NotificationServiceClient;
+
   constructor(
     @InjectRepository(PaymentEntity)
     private readonly paymentRepository: Repository<PaymentEntity>,
     @Inject(NOTIFICATION_SERVICE)
-    private readonly notificationService: ClientProxy,
+    private readonly notificationMicroService: ClientGrpc,
   ) {}
+
+  onModuleInit() {
+    this.notificationService =
+      this.notificationMicroService.getService<NotificationMicroService.NotificationServiceClient>(
+        NotificationMicroService.NOTIFICATION_SERVICE_NAME,
+      );
+  }
 
   async makePayment(payload: MakePaymentDto) {
     let paymentId: string | null = null;
@@ -27,7 +36,6 @@ export class PaymentService {
 
       await this.updatePaymentStatus(paymentId, PaymentStatusEnum.approved);
 
-      // TODO: send notification
       this.sendNotification(payload.orderId, payload.userEmail);
 
       return this.paymentRepository.findOneBy({ id: paymentId });
@@ -54,11 +62,8 @@ export class PaymentService {
   }
 
   sendNotification(orderId: string, to: string) {
-    const response = lastValueFrom(
-      this.notificationService.send(
-        { cmd: 'send_payment_notification' },
-        { orderId, to },
-      ),
-    );
+    // const response = lastValueFrom(
+    this.notificationService.sendPaymentNotification({ orderId, to });
+    // );
   }
 }

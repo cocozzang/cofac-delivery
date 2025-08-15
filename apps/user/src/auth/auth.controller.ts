@@ -3,11 +3,11 @@ import { AuthService } from './auth.service';
 import { UserMicroService } from '@app/common';
 
 @Controller('auth')
+@UserMicroService.AuthServiceControllerMethods()
 export class AuthController implements UserMicroService.AuthServiceController {
   constructor(private readonly authService: AuthService) {}
 
   async parseBearerToken(request: UserMicroService.ParseBearerTokenRequest) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return await this.authService.parseBearerToken(request.token, false);
   }
 

@@ -9,6 +9,7 @@ import { OrderStatusEnum } from './entity/order.schema';
 import { PaymentMethodEnum } from './entity/payment.schema';
 
 @Controller()
+@OrderMicroService.OrderServiceControllerMethods()
 export class OrderController
   implements OrderMicroService.OrderServiceController
 {

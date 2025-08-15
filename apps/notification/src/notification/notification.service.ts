@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import {
   Notification,
@@ -6,17 +6,26 @@ import {
 } from './entity/notification.schema';
 import { Model } from 'mongoose';
 import { SendPaymentNotificationDto } from './dto/send-payment-notification.dto';
-import { ORDER_SERVICE } from '@app/common';
-import { ClientProxy } from '@nestjs/microservices';
+import { ORDER_SERVICE, OrderMicroService } from '@app/common';
+import { ClientGrpc } from '@nestjs/microservices';
 
 @Injectable()
-export class NotificationService {
+export class NotificationService implements OnModuleInit {
+  orderService: OrderMicroService.OrderServiceClient;
+
   constructor(
     @InjectModel(Notification.name)
     private readonly notificationModel: Model<Notification>,
     @Inject(ORDER_SERVICE)
-    private readonly orderService: ClientProxy,
+    private readonly orderMicroService: ClientGrpc,
   ) {}
+
+  onModuleInit() {
+    this.orderService =
+      this.orderMicroService.getService<OrderMicroService.OrderServiceClient>(
+        OrderMicroService.ORDER_SERVICE_NAME,
+      );
+  }
 
   async sendPaymentNotification(data: SendPaymentNotificationDto) {
     const notification = await this.createNotification(data.to);
@@ -24,7 +33,6 @@ export class NotificationService {
     await this.sendEmail();
 
     await this.updateNotificationStatus(
-      // eslint-disable-next-line @typescript-eslint/no-base-to-string
       notification._id.toString(),
       NotificationStatusEnum.sent,
     );
@@ -35,7 +43,7 @@ export class NotificationService {
   }
 
   sendDeliveryStartedMessage(orderId: string) {
-    this.orderService.emit({ cmd: 'delivery_started' }, { id: orderId });
+    this.orderService.deliveryStarted({ id: orderId });
   }
 
   async updateNotificationStatus(id: string, status: NotificationStatusEnum) {

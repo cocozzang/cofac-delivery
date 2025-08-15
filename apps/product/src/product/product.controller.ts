@@ -3,6 +3,7 @@ import { ProductService } from './product.service';
 import { ProductMicroService } from '@app/common';
 
 @Controller('product')
+@ProductMicroService.ProductServiceControllerMethods()
 export class ProductController
   implements ProductMicroService.ProductServiceController
 {

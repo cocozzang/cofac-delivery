@@ -1,23 +1,28 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { USER_SERVICE } from '@app/common';
+import { USER_SERVICE, UserMicroService } from '@app/common';
 import {
   Inject,
   Injectable,
   NestMiddleware,
-  UnauthorizedException,
+  OnModuleInit,
 } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
+import { ClientGrpc } from '@nestjs/microservices';
 import { Request } from 'express';
 import { lastValueFrom } from 'rxjs';
 
 @Injectable()
-export class BearerTokenMiddleware implements NestMiddleware {
+export class BearerTokenMiddleware implements NestMiddleware, OnModuleInit {
+  authService: UserMicroService.AuthServiceClient;
+
   constructor(
     @Inject(USER_SERVICE)
-    private readonly userMicroService: ClientProxy,
+    private readonly userMicroService: ClientGrpc,
   ) {}
+
+  onModuleInit() {
+    this.authService = this.userMicroService.getService(
+      UserMicroService.AUTH_SERVICE_NAME,
+    );
+  }
 
   async use(req: Request, res: any, next: (error?: any) => void) {
     const token = this.getRawToken(req);
@@ -41,13 +46,13 @@ export class BearerTokenMiddleware implements NestMiddleware {
   }
 
   async verifyToken(token: string) {
-    const result = await lastValueFrom(
-      this.userMicroService.send({ cmd: 'parse_bearer_token' }, { token }),
+    const response = await lastValueFrom(
+      this.authService.parseBearerToken({ token }),
     );
 
-    if (result.status === 'error')
-      throw new UnauthorizedException('토큰 정보가 잘못되었습니다.');
-
-    return result.data;
+    return {
+      sub: response.sub,
+      type: response.type as 'access' | 'refresh',
+    };
   }
 }
