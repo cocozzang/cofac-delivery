@@ -1,22 +1,27 @@
-import {
-  Controller,
-  UseInterceptors,
-  UsePipes,
-  ValidationPipe,
-} from '@nestjs/common';
+import { Controller, InternalServerErrorException } from '@nestjs/common';
 import { PaymentService } from './payment.service';
-import { MessagePattern, Payload } from '@nestjs/microservices';
-import { MakePaymentDto } from './dto/make-payment.dto';
-import { RpcInterceptor } from '@app/common/interceptor/rpc.interceptor';
+import { PaymentMicroService } from '@app/common';
+import { PaymentMethodEnum } from './entity/payment.entity';
 
 @Controller()
-export class PaymentController {
+export class PaymentController
+  implements PaymentMicroService.PaymentServiceController
+{
   constructor(private readonly paymentService: PaymentService) {}
 
-  @UseInterceptors(RpcInterceptor)
-  @UsePipes(new ValidationPipe({ forbidNonWhitelisted: true, whitelist: true }))
-  @MessagePattern({ cmd: 'make_payment' })
-  makePayment(@Payload() payload: MakePaymentDto) {
-    return this.paymentService.makePayment(payload);
+  async makePayment(request: PaymentMicroService.MakePaymentRequest) {
+    const response = await this.paymentService.makePayment({
+      ...request,
+      paymentMethod: request.paymentMethod as PaymentMethodEnum,
+    });
+
+    if (!response)
+      throw new InternalServerErrorException('payment create transaction 실패');
+
+    return {
+      id: response.id,
+      pyamentStatus: response.paymentStatus,
+      paymentMethod: response.paymentMethod,
+    };
   }
 }

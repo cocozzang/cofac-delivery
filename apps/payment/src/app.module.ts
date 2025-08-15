@@ -3,8 +3,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as Joi from 'joi';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PaymentModule } from './payment/payment.module';
-import { NOTIFICATION_SERVICE } from '@app/common';
+import { NOTIFICATION_SERVICE, NotificationMicroService } from '@app/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -30,10 +31,11 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
         {
           name: NOTIFICATION_SERVICE,
           useFactory: (configService: ConfigService) => ({
-            transport: Transport.TCP,
+            transport: Transport.GRPC,
             options: {
-              host: configService.getOrThrow<string>('NOTIFICATION_HOST'),
-              port: +configService.getOrThrow<number>('NOTIFICATION_TCP_PORT'),
+              package: NotificationMicroService.protobufPackage,
+              protoPath: join(process.cwd(), 'proto/notification.proto'),
+              url: configService.getOrThrow('GRPC_NOTIFICATION_URL'),
             },
           }),
           inject: [ConfigService],

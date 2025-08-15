@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { UserService } from '../user/user.service';
@@ -25,11 +26,21 @@ export class AuthService {
   async register(rawToken: string, registerDto: RegisterDto) {
     const { email, password } = this.parseBasicToken(rawToken);
 
-    return this.userService.create({
+    const res = await this.userService.create({
       ...registerDto,
       email,
       password,
     });
+
+    if (!res) throw new InternalServerErrorException('db에서 user 생성에 실패');
+
+    return {
+      id: res.id,
+      email: res.email,
+      name: res.name,
+      age: res.age,
+      profile: res.profile,
+    };
   }
 
   parseBasicToken(rawToken: string) {

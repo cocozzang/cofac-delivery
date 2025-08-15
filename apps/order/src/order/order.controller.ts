@@ -1,33 +1,57 @@
 import {
+  BadRequestException,
   Controller,
-  UseInterceptors,
-  UsePipes,
-  ValidationPipe,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { OrderService } from './order.service';
-import { EventPattern, MessagePattern, Payload } from '@nestjs/microservices';
-import { RpcInterceptor } from '@app/common';
+import { OrderMicroService } from '@app/common';
 import { OrderStatusEnum } from './entity/order.schema';
-import { DeliveryStartedDto } from './dto/delivery-started.dto';
-import { CreateOrderDto } from './dto/create-order.dto';
+import { PaymentMethodEnum } from './entity/payment.schema';
 
-@Controller('order')
-export class OrderController {
+@Controller()
+export class OrderController
+  implements OrderMicroService.OrderServiceController
+{
   constructor(private readonly orderService: OrderService) {}
 
-  @UseInterceptors(RpcInterceptor)
-  @MessagePattern({ cmd: 'create_order' })
-  @UsePipes(new ValidationPipe())
-  async createOrder(@Payload() createOrderDto: CreateOrderDto) {
-    return this.orderService.createOrder(createOrderDto);
+  async createOrder(request: Required<OrderMicroService.CreateOrderRequest>) {
+    if (
+      !request.adrees ||
+      !request.meta ||
+      !request.meta.user ||
+      !request.payment
+    )
+      throw new BadRequestException('unvalide request');
+
+    const response = await this.orderService.createOrder({
+      ...request,
+      meta: {
+        user: {
+          sub: request.meta.user.sub,
+          type: request.meta.user.type as 'access' | 'refresh',
+        },
+      },
+      address: request.adrees,
+      payment: {
+        ...request.payment,
+        paymentMethod: request.payment.paymentMethod as PaymentMethodEnum,
+      },
+    });
+
+    if (!response) throw new InternalServerErrorException('transaction 실패');
+
+    return {
+      customer: response.customer,
+      products: response.products,
+      deliverAddress: response.deliveryAddress,
+      status: response.status,
+      payment: response.payment,
+    };
   }
 
-  @UseInterceptors(RpcInterceptor)
-  @UsePipes(new ValidationPipe({ forbidNonWhitelisted: true, whitelist: true }))
-  @EventPattern({ cmd: 'delivery_started' })
-  async deliveryStarted(@Payload() payload: DeliveryStartedDto) {
+  async deliveryStarted(request: OrderMicroService.DeliveryStartedRequest) {
     await this.orderService.changeOrderStatus(
-      payload.id,
+      request.id,
       OrderStatusEnum.deliveryStarted,
     );
   }

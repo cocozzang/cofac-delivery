@@ -1,66 +1,28 @@
-import {
-  Controller,
-  UnauthorizedException,
-  UseInterceptors,
-  UsePipes,
-  ValidationPipe,
-} from '@nestjs/common';
+import { Controller, UnauthorizedException } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { MessagePattern, Payload, Transport } from '@nestjs/microservices';
-import { ParseBearerTokenDto } from './dto/parse-bearer-token.dto';
-import { RpcInterceptor } from '@app/common/interceptor/rpc.interceptor';
-import { RegisterDto } from './dto/register.dto';
-import { LoginDto } from './dto/login.dto';
+import { UserMicroService } from '@app/common';
 
 @Controller('auth')
-export class AuthController {
+export class AuthController implements UserMicroService.AuthServiceController {
   constructor(private readonly authService: AuthService) {}
 
-  // @Post('register')
-  // registerUser(
-  //   @CurrentAuthrization() token: string,
-  //   @Body() registerDto: RegisterDto,
-  // ) {
-  //   if (token === null) throw new UnauthorizedException('토큰을 입력해주세요');
-  //
-  //   return this.authService.register(token, registerDto);
-  // }
-  //
-  // @Post('login')
-  // @UsePipes(new ValidationPipe({ forbidNonWhitelisted: true, whitelist: true }))
-  // loginUser(@CurrentAuthrization() token: string) {
-  //   if (token === null) throw new UnauthorizedException('토큰 주셈');
-  //
-  //   return this.authService.login(token);
-  // }
-
-  @MessagePattern(
-    {
-      cmd: 'parse_bearer_token',
-    },
-    Transport.TCP,
-  )
-  @UsePipes(new ValidationPipe({ forbidNonWhitelisted: true, whitelist: true }))
-  @UseInterceptors(RpcInterceptor)
-  async parseBearerToken(@Payload() payload: ParseBearerTokenDto) {
+  async parseBearerToken(request: UserMicroService.ParseBearerTokenRequest) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return await this.authService.parseBearerToken(payload.token, false);
+    return await this.authService.parseBearerToken(request.token, false);
   }
 
-  @MessagePattern({ cmd: 'register' })
-  registerUser(@Payload() registerDto: RegisterDto) {
-    const { token } = registerDto;
+  registerUser(request: UserMicroService.RegisterUserRequest) {
+    const { token } = request;
 
     if (!token) {
       throw new UnauthorizedException('basic auth token을 입력해주세요');
     }
 
-    return this.authService.register(token, registerDto);
+    return this.authService.register(token, request);
   }
 
-  @MessagePattern({ cmd: 'login' })
-  loginUser(@Payload() loginDto: LoginDto) {
-    const { token } = loginDto;
+  loginUser(request: UserMicroService.LoginUserRequest) {
+    const { token } = request;
 
     if (!token) {
       throw new UnauthorizedException('basic auth token을 입력해주세요');

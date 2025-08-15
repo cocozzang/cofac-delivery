@@ -1,24 +1,35 @@
-import {
-  Controller,
-  UseInterceptors,
-  UsePipes,
-  ValidationPipe,
-} from '@nestjs/common';
+import { Controller, InternalServerErrorException } from '@nestjs/common';
 import { NotificationService } from './notification.service';
-import { MessagePattern, Payload } from '@nestjs/microservices';
-import { RpcInterceptor } from '@app/common';
-import { SendPaymentNotificationDto } from './dto/send-payment-notification.dto';
+import { NotificationMicroService } from '@app/common';
 
 @Controller()
-export class NotificationController {
+export class NotificationController
+  implements NotificationMicroService.NotificationServiceController
+{
   constructor(private readonly notificationService: NotificationService) {}
 
-  @UseInterceptors(RpcInterceptor)
-  @UsePipes(new ValidationPipe({ forbidNonWhitelisted: true, whitelist: true }))
-  @MessagePattern({ cmd: 'send_payment_notification' })
   async sendPaymentNotification(
-    @Payload() payload: SendPaymentNotificationDto,
+    request: NotificationMicroService.SendPaymentNotificationRequest,
   ) {
-    return this.notificationService.sendPaymentNotification(payload);
+    const response =
+      await this.notificationService.sendPaymentNotification(request);
+
+    if (!response) throw new InternalServerErrorException('transaction 실패');
+
+    const res = response.toJSON();
+
+    return {
+      ...res,
+      status: res.status,
+    };
+
+    //
+    // return {
+    //   from: response.from,
+    //   to: response.to,
+    //   subject: response.subject,
+    //   content: response.content,
+    //   status: response.status,
+    // };
   }
 }
