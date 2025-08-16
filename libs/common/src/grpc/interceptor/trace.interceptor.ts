@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { InterceptingCall } from '@grpc/grpc-js';
 
 export const traceInterceptor = (service: string) => (options, nextCall) => {

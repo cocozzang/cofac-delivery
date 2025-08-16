@@ -1,7 +1,13 @@
-import { Controller, InternalServerErrorException } from '@nestjs/common';
+import {
+  Controller,
+  InternalServerErrorException,
+  UseInterceptors,
+} from '@nestjs/common';
 import { NotificationService } from './notification.service';
-import { NotificationMicroService } from '@app/common';
+import { GrpcInterceptor, NotificationMicroService } from '@app/common';
+import { Metadata } from '@grpc/grpc-js';
 
+@UseInterceptors(GrpcInterceptor)
 @Controller()
 @NotificationMicroService.NotificationServiceControllerMethods()
 export class NotificationController
@@ -11,9 +17,12 @@ export class NotificationController
 
   async sendPaymentNotification(
     request: NotificationMicroService.SendPaymentNotificationRequest,
+    metadata: Metadata,
   ) {
-    const response =
-      await this.notificationService.sendPaymentNotification(request);
+    const response = await this.notificationService.sendPaymentNotification(
+      request,
+      metadata,
+    );
 
     if (!response) throw new InternalServerErrorException('transaction 실패');
 

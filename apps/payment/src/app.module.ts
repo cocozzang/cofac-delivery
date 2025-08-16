@@ -3,7 +3,11 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as Joi from 'joi';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PaymentModule } from './payment/payment.module';
-import { NOTIFICATION_SERVICE, NotificationMicroService } from '@app/common';
+import {
+  NOTIFICATION_SERVICE,
+  NotificationMicroService,
+  traceInterceptor,
+} from '@app/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { join } from 'path';
 
@@ -33,6 +37,9 @@ import { join } from 'path';
           useFactory: (configService: ConfigService) => ({
             transport: Transport.GRPC,
             options: {
+              channelOptions: {
+                interceptors: [traceInterceptor('Payment')],
+              },
               package: NotificationMicroService.protobufPackage,
               protoPath: join(process.cwd(), 'proto/notification.proto'),
               url: configService.getOrThrow('GRPC_NOTIFICATION_URL'),

@@ -2,12 +2,15 @@ import {
   BadRequestException,
   Controller,
   InternalServerErrorException,
+  UseInterceptors,
 } from '@nestjs/common';
 import { OrderService } from './order.service';
-import { OrderMicroService } from '@app/common';
+import { GrpcInterceptor, OrderMicroService } from '@app/common';
 import { OrderStatusEnum } from './entity/order.schema';
 import { PaymentMethodEnum } from './entity/payment.schema';
+import { Metadata } from '@grpc/grpc-js';
 
+@UseInterceptors(GrpcInterceptor)
 @Controller()
 @OrderMicroService.OrderServiceControllerMethods()
 export class OrderController
@@ -15,7 +18,10 @@ export class OrderController
 {
   constructor(private readonly orderService: OrderService) {}
 
-  async createOrder(request: Required<OrderMicroService.CreateOrderRequest>) {
+  async createOrder(
+    request: Required<OrderMicroService.CreateOrderRequest>,
+    metadata: Metadata,
+  ) {
     if (
       !request.adrees ||
       !request.meta ||
@@ -24,20 +30,23 @@ export class OrderController
     )
       throw new BadRequestException('unvalide request');
 
-    const response = await this.orderService.createOrder({
-      ...request,
-      meta: {
-        user: {
-          sub: request.meta.user.sub,
-          type: request.meta.user.type as 'access' | 'refresh',
+    const response = await this.orderService.createOrder(
+      {
+        ...request,
+        meta: {
+          user: {
+            sub: request.meta.user.sub,
+            type: request.meta.user.type as 'access' | 'refresh',
+          },
+        },
+        address: request.adrees,
+        payment: {
+          ...request.payment,
+          paymentMethod: request.payment.paymentMethod as PaymentMethodEnum,
         },
       },
-      address: request.adrees,
-      payment: {
-        ...request.payment,
-        paymentMethod: request.payment.paymentMethod as PaymentMethodEnum,
-      },
-    });
+      metadata,
+    );
 
     if (!response) throw new InternalServerErrorException('transaction 실패');
 

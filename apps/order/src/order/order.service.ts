@@ -5,6 +5,7 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { ClientGrpc } from '@nestjs/microservices';
 import { lastValueFrom } from 'rxjs';
 import {
+  constructMetadata,
   PAYMENT_SERVICE,
   PaymentMicroService,
   PRODUCT_SERVICE,
@@ -21,6 +22,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { PaymentDto } from './dto/payment.dto';
 import { PaymentFiledException } from './exception/payment-failed.exception';
+import { Metadata } from '@grpc/grpc-js';
 
 @Injectable()
 export class OrderService implements OnModuleInit {
@@ -56,14 +58,17 @@ export class OrderService implements OnModuleInit {
       );
   }
 
-  async createOrder(createOrderDto: CreateOrderDto) {
+  async createOrder(createOrderDto: CreateOrderDto, metadata: Metadata) {
     const { productIds, address, payment, meta } = createOrderDto;
 
     // 1) 사용자정보 가져오기
-    const user = await this.getUserFromToken(meta.user.sub);
+    const user = await this.getUserFromToken(meta.user.sub, metadata);
 
     // 2) 상품정보 가져오기
-    const products = (await this.getProductsByIds(productIds)) as Product[];
+    const products = (await this.getProductsByIds(
+      productIds,
+      metadata,
+    )) as Product[];
 
     // 3) 총 금액 계산하기
     const totalAmount = this.calculateTotalAmount(products);
@@ -88,15 +93,19 @@ export class OrderService implements OnModuleInit {
       // order._id.toHexString(), ObjectId객체안에 toHexString() 메서드가 왜 없을까?
       payment,
       user.email,
+      metadata,
     );
 
     // 7) 결과 반환하기
     return this.orderModel.findById(order._id);
   }
 
-  private async getUserFromToken(userId: string) {
+  private async getUserFromToken(userId: string, metadata: Metadata) {
     const userResponse = await lastValueFrom(
-      this.userService.getUserinfo({ userId }),
+      this.userService.getUserinfo(
+        { userId },
+        constructMetadata(OrderService.name, 'getUserFromToken', metadata),
+      ),
     );
 
     return {
@@ -108,9 +117,12 @@ export class OrderService implements OnModuleInit {
     };
   }
 
-  private async getProductsByIds(productIds: string[]) {
+  private async getProductsByIds(productIds: string[], metadata: Metadata) {
     const response = await lastValueFrom(
-      this.productService.getProductsInfo({ productIds }),
+      this.productService.getProductsInfo(
+        { productIds },
+        constructMetadata(OrderService.name, 'getProductsByIds', metadata),
+      ),
     );
 
     return response.products.map((product: any) => ({
@@ -157,10 +169,14 @@ export class OrderService implements OnModuleInit {
     orderId: string,
     paymentDto: PaymentDto,
     userEmail: string,
+    metadata: Metadata,
   ) {
     try {
       const response = await lastValueFrom(
-        this.paymentService.makePayment({ ...paymentDto, userEmail, orderId }),
+        this.paymentService.makePayment(
+          { ...paymentDto, userEmail, orderId },
+          constructMetadata(OrderService.name, 'processPayment', metadata),
+        ),
       );
 
       const isPaid = response.pyamentStatus === 'Approved';
