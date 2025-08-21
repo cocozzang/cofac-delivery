@@ -1,0 +1,32 @@
+services:
+  gateway:
+    image: karlcoco/fc-nestjs-gateway
+    ports:
+      - '3000:3000'
+    env_file:
+      - ./apps/gateway/.env.production
+
+  user:
+    image: karlcoco/fc-nestjs-user
+    env_file:
+      - ./apps/user/.env.production
+
+  product:
+    image: karlcoco/fc-nestjs-product
+    env_file:
+      - ./apps/product/.env.production
+
+  order:
+    image: karlcoco/fc-nestjs-order
+    env_file:
+      - ./apps/order/.env.production
+
+  payment:
+    image: karlcoco/fc-nestjs-payment
+    env_file:
+      - ./apps/payment/.env.production
+
+  notification:
+    image: karlcoco/fc-nestjs-notification
+    env_file:
+      - ./apps/notification/.env.production

@@ -27,6 +27,11 @@ import { join } from 'path';
         url: configService.getOrThrow('DB_URL'),
         autoLoadEntities: true,
         synchronize: true,
+        ...(configService.get('NODE_ENV') === 'production' && {
+          ssl: {
+            rejectUnauthorized: false,
+          },
+        }),
       }),
       inject: [ConfigService],
     }),
