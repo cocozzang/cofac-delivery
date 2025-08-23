@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Chart.Name }}-order-deployment
+  labels:
+    app: order
+
+spec:
+  replicas: {{ .Values.order.replicas }}
+  selector:
+    matchLabels:
+      app: order
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+    
+  template:
+    metadata:
+      labels:
+        app: order
+    spec:
+      containers:
+        - name: order
+          image: karlcoco/fc-nestjs-order:latest
+          envFrom:
+            - configMapRef:
+                name: order-config-map
+            - secretRef:
+                name: order-secret
+          ports:
+            - containerPort: 3014
+          livenessProbe:
+            tcpSocket:
+              port: 3014
+            periodSeconds: 5
+          readinessProbe:
+            tcpSocket:
+              port: 3014
+            periodSeconds: 5

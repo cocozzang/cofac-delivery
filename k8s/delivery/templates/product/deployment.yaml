@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Chart.Name }}-product-deployment
+  labels:
+    app: product
+
+spec:
+  replicas: {{ .Values.product.replicas }}
+  selector:
+    matchLabels:
+      app: product
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+    
+  template:
+    metadata:
+      labels:
+        app: product
+    spec:
+      containers:
+        - name: product
+          image: karlcoco/fc-nestjs-product:latest
+          envFrom:
+            - configMapRef:
+                name: product-config-map
+            - secretRef:
+                name: product-secret
+          ports:
+            - containerPort: 3012
+          livenessProbe:
+            tcpSocket:
+              port: 3012
+            periodSeconds: 5
+          readinessProbe:
+            tcpSocket:
+              port: 3012
+            periodSeconds: 5
+    

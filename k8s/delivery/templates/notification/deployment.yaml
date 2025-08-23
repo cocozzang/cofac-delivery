@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Chart.Name }}-notification-deployment
+  labels:
+    app: notification
+
+spec:
+  replicas: {{ .Values.notification.replicas }}
+  selector:
+    matchLabels:
+      app: notification
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+    
+  template:
+    metadata:
+      labels:
+        app: notification
+    spec:
+      containers:
+        - name: notification
+          image: karlcoco/fc-nestjs-notification:latest
+          envFrom:
+            - configMapRef:
+                name: notification-config-map
+            - secretRef:
+                name: order-secret
+          ports:
+            - containerPort: 3015
+          livenessProbe:
+            tcpSocket:
+              port: 3015
+            periodSeconds: 5
+          readinessProbe:
+            tcpSocket:
+              port: 3015
+            periodSeconds: 5
+    

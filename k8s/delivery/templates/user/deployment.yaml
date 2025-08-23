@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Chart.Name }}-user-deployment
+  labels:
+    app: user
+
+spec:
+  replicas: {{ .Values.user.replicas }}
+  selector:
+    matchLabels:
+      app: user
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+    
+  template:
+    metadata:
+      labels:
+        app: user
+    spec:
+      containers:
+        - name: user
+          image: karlcoco/fc-nestjs-user:latest
+          envFrom:
+            - configMapRef:
+                name: user-config-map
+            - secretRef:
+                name: user-secret
+          ports:
+            - containerPort: 3011
+          livenessProbe:
+            tcpSocket:
+              port: 3011
+            periodSeconds: 5
+          readinessProbe:
+            tcpSocket:
+              port: 3011
+            periodSeconds: 5
+    

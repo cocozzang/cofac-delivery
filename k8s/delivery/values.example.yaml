@@ -1,0 +1,22 @@
+gateway:
+  replicas: 1
+
+notification:
+  replicas: 1
+  db_url: '<DB_URL>'
+
+order:
+  replicas: 1
+  db_url: '<DB_URL>'
+
+payment:
+  replicas: 1
+  db_url: '<DB_URL>'
+
+product:
+  replicas: 1
+  db_url: '<DB_URL>'
+
+user:
+  replicas: 1
+  db_url: '<DB_URL>'
