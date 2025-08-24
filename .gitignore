@@ -56,3 +56,4 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 /docker-volumes
 
 k8s/delivery/values.yaml
+iam-policy.json
