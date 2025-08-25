@@ -15,6 +15,8 @@ export enum NotificationStatusEnum {
 }
 
 export class PaymentDomain {
+  private readonly __brand = 'PaymentDomain';
+
   id: string;
   orderId: string;
   paymentStatus: PaymentStatusEnum;

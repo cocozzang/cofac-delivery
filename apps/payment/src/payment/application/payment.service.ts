@@ -2,7 +2,9 @@ import { PaymentDomain, PaymentMethodEnum } from '../domain/payment.domain';
 import { DatabaseOutputPort } from '../port/output/database.output-port';
 import { NetworkOuputPort } from '../port/output/network.output-port';
 import { PaymentOuputPort } from '../port/output/payment.output-port';
+import { Injectable } from '@nestjs/common';
 
+@Injectable()
 export class PaymentService {
   constructor(
     private readonly databaseOuputPort: DatabaseOutputPort,
