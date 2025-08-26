@@ -1,20 +1,9 @@
+import {
+  NotificationStatusEnum,
+  PaymentMethodEnum,
+  PaymentStatusEnum,
+} from 'apps/payment/src/payment/domain/payment.domain';
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-
-export enum PaymentStatusEnum {
-  pending = 'Pending',
-  rejected = 'Rejected',
-  approved = 'Approved',
-}
-
-export enum PaymentMethodEnum {
-  creditCard = 'CreditCard',
-  kakao = 'Kakao',
-}
-
-export enum NotificationStatusEnum {
-  pending = 'pending',
-  sent = 'sent',
-}
 
 @Entity({ name: 'payment' })
 export class PaymentEntity {
@@ -22,12 +11,14 @@ export class PaymentEntity {
   id: string;
 
   @Column({
+    type: 'enum',
     enum: PaymentStatusEnum,
     default: PaymentStatusEnum.pending,
   })
   paymentStatus: PaymentStatusEnum;
 
   @Column({
+    type: 'enum',
     enum: PaymentMethodEnum,
     default: PaymentMethodEnum.creditCard,
   })
@@ -35,6 +26,9 @@ export class PaymentEntity {
 
   @Column()
   cardNumber: string;
+
+  @Column()
+  expiryYear: string;
 
   @Column()
   expiryMonth: string;
@@ -46,8 +40,18 @@ export class PaymentEntity {
   passwordTwoDigits: string;
 
   @Column({
+    type: 'enum',
     enum: NotificationStatusEnum,
     default: NotificationStatusEnum.pending,
   })
   notificationStatus: NotificationStatusEnum;
+
+  @Column()
+  orderId: string;
+
+  @Column()
+  amount: number;
+
+  @Column()
+  userEmail: string;
 }
