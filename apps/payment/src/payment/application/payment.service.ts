@@ -2,13 +2,16 @@ import { PaymentDomain, PaymentMethodEnum } from '../domain/payment.domain';
 import { DatabaseOutputPort } from '../port/output/database.output-port';
 import { NetworkOuputPort } from '../port/output/network.output-port';
 import { PaymentOuputPort } from '../port/output/payment.output-port';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 
 @Injectable()
 export class PaymentService {
   constructor(
+    @Inject('DatabaseOutputPort')
     private readonly databaseOuputPort: DatabaseOutputPort,
+    @Inject('PaymentOutputPort')
     private readonly paymentOutputPort: PaymentOuputPort,
+    @Inject('NetworkOutputPort')
     private readonly networkOutputPort: NetworkOuputPort,
   ) {}
 
@@ -39,6 +42,7 @@ export class PaymentService {
       // 5) 결제 데이터를 업데이트한다 ( 실패시 reject 로직 )
       payment.processPayment();
       await this.databaseOuputPort.updatePayment(payment);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       payment.rejectPayment();
       await this.databaseOuputPort.updatePayment(payment);
@@ -46,7 +50,7 @@ export class PaymentService {
     }
 
     // 6) 결제 성공시에 알림보내기 sendPaymentNotification gRPC 호출
-    this.networkOutputPort.sendPaymentNotification(
+    await this.networkOutputPort.sendPaymentNotification(
       param.orderId,
       param.userEmail,
     );

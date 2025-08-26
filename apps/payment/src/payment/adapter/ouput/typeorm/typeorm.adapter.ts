@@ -23,7 +23,7 @@ export class TypeOrmAdapter implements DatabaseOutputPort {
       .returning('*')
       .execute();
 
-    const result = insertResult.raw as PaymentEntity[][0];
+    const result = (insertResult.raw as PaymentEntity[])[0];
 
     return new PaymentEntityMapper(result).toDomain();
   }
