@@ -3,6 +3,12 @@ export enum PaymentMethodEnum {
   kakaoPay = 'KakaoPay',
 }
 
+export enum PaymentStatusEnum {
+  pending = 'Pending',
+  rejected = 'Rejected',
+  approved = 'Approved',
+}
+
 export class PaymentDomain {
   paymentId: string;
   paymentMethod: PaymentMethodEnum;
