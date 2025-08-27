@@ -1,6 +1,6 @@
 import { OrderOutputPort } from '../port/output/order.output-port';
 
-export class StartDelioveryUsecase {
+export class StartDeliveryUsecase {
   constructor(private readonly orderOuputPort: OrderOutputPort) {}
 
   async execute(orderId: string) {

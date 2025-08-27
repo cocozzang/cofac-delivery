@@ -24,7 +24,7 @@ export class CreateOrderUsecase {
     const order = new OrderDomain({
       customer: user,
       products,
-      deliveryAddress: dto.address,
+      deliveryAddress: dto.deliveryaddress,
     });
     // 4) 총액을 계싼한다 - Order
     order.calculateTotalAmount();

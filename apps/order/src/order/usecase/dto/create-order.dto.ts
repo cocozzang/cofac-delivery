@@ -3,7 +3,7 @@ import { PaymentMethodEnum } from '../../domain/payment.domain';
 export interface CreateOrderDto {
   userId: string;
   productIds: string[];
-  address: AddressDto;
+  deliveryaddress: AddressDto;
   payment: PaymentDto;
 }
 
@@ -17,7 +17,7 @@ export interface AddressDto {
 
 export interface PaymentDto {
   paymentMethod: PaymentMethodEnum;
-  payemtnName: string;
+  paymentName: string;
   cardNumber: string;
   expiryYear: string;
   expiryMonth: string;

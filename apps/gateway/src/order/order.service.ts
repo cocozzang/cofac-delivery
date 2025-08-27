@@ -27,7 +27,7 @@ export class OrderService implements OnModuleInit {
     return this.orderService.createOrder(
       {
         ...createOrderDto,
-        adrees: createOrderDto.address,
+        address: createOrderDto.address,
         meta: { user },
       },
       constructMetadata(OrderService.name, 'createOrder'),
