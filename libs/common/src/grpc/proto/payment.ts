@@ -26,7 +26,7 @@ export interface MakePaymentRequest {
 
 export interface MakePaymentResponse {
   id: string;
-  pyamentStatus: string;
+  paymentStatus: string;
   paymentMethod: string;
 }
 

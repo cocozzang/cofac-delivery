@@ -21,6 +21,6 @@ message MakePaymentRequest {
 
 message MakePaymentResponse {
   string id = 1;
-  string pyamentStatus = 2;
+  string paymentStatus = 2;
   string paymentMethod = 3;
 }

@@ -14,7 +14,7 @@ export const protobufPackage = "order";
 export interface CreateOrderRequest {
   meta: CreateOrderRequest_Meta | undefined;
   productIds: string[];
-  adrees: CreateOrderRequest_Address | undefined;
+  address: CreateOrderRequest_Address | undefined;
   payment: CreateOrderRequest_Payment | undefined;
 }
 
@@ -49,7 +49,7 @@ export interface CreateOrderRequest_Payment {
 export interface CreateOrderResponse {
   customer: CreateOrderResponse_Customer | undefined;
   products: CreateOrderResponse_Product[];
-  deliverAddress: CreateOrderResponse_DeliveryAddress | undefined;
+  deliveryAddress: CreateOrderResponse_DeliveryAddress | undefined;
   status: string;
   payment: CreateOrderResponse_Payment | undefined;
 }
