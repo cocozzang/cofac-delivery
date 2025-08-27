@@ -6,7 +6,7 @@ export enum PaymentStatusEnum {
 
 export enum PaymentMethodEnum {
   creditCard = 'CreditCard',
-  kakao = 'Kakao',
+  kakaoPay = 'KakaoPay',
 }
 
 export enum NotificationStatusEnum {
