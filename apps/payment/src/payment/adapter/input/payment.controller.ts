@@ -26,7 +26,7 @@ export class PaymentController
 
     return {
       id: response.id,
-      pyamentStatus: response.paymentStatus,
+      paymentStatus: response.paymentStatus,
       paymentMethod: response.paymentMethod,
     };
   }

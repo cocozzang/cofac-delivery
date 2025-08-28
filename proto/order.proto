@@ -37,7 +37,7 @@ message CreateOrderRequest {
 
   Meta meta = 1;
   repeated string productIds = 2;
-  Address adrees = 3;
+  Address address = 3;
   Payment payment = 4;
 }
 
@@ -70,7 +70,7 @@ message CreateOrderResponse {
 
   Customer customer = 1;
   repeated Product products = 2;
-  DeliveryAddress deliverAddress = 3;
+  DeliveryAddress deliveryAddress = 3;
   string status = 4;
   Payment payment = 5;
 }
