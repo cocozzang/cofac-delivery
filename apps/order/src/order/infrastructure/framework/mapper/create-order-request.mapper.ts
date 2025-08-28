@@ -14,7 +14,7 @@ export class CreateOrderRequestMapper {
     return {
       userId: this.request.meta?.user?.sub as string,
       productIds: this.request.productIds,
-      deliveryaddress: this.request.addrees as AddressDto,
+      deliveryaddress: this.request.address as AddressDto,
       payment: {
         ...this.request.payment,
         paymentMethod: this.parsePaymentMethod(
