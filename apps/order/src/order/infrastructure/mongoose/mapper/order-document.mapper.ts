@@ -12,7 +12,7 @@ export class OrderDocumentMapper {
       deliveryAddress: this.document.deliveryAddress,
     });
 
-    order.setId(order.id);
+    order.setId(this.document.id as string);
     order.setPayment(order.payment);
 
     return order;

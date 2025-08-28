@@ -46,7 +46,6 @@ export class OrderDocument extends Document<ObjectId> {
 
   @Prop({
     type: PaymentSchema,
-    required: true,
   })
   payment: PaymentDocument;
 }
