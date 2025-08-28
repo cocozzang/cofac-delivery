@@ -1,15 +1,33 @@
+import { Inject, Injectable } from '@nestjs/common';
 import { OrderDomain } from '../domain/order.domain';
-import { OrderOutputPort } from '../port/output/order.output-port';
-import { PaymentOutputPort } from '../port/output/payment.output-port';
-import { ProductOutputPort } from '../port/output/product.output-port';
-import { UserOutputPort } from '../port/output/user.output-port';
+import {
+  ORDER_OUTPUT_PORT,
+  OrderOutputPort,
+} from '../port/output/order.output-port';
+import {
+  PAYMENT_OUTPUT_PORT,
+  PaymentOutputPort,
+} from '../port/output/payment.output-port';
+import {
+  PRODUCT_OUTPUT_PORT,
+  ProductOutputPort,
+} from '../port/output/product.output-port';
+import {
+  USER_OUTPUT_PORT,
+  UserOutputPort,
+} from '../port/output/user.output-port';
 import { CreateOrderDto } from './dto/create-order.dto';
 
+@Injectable()
 export class CreateOrderUsecase {
   constructor(
+    @Inject(USER_OUTPUT_PORT)
     private readonly userOutputPort: UserOutputPort,
+    @Inject(PRODUCT_OUTPUT_PORT)
     private readonly productOutputPort: ProductOutputPort,
+    @Inject(ORDER_OUTPUT_PORT)
     private readonly orderOutputPort: OrderOutputPort,
+    @Inject(PAYMENT_OUTPUT_PORT)
     private readonly paymentOutputPort: PaymentOutputPort,
   ) {}
 
